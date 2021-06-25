@@ -1,0 +1,19 @@
+<launch>
+
+  <arg name="rviz" default="false" />
+
+  <node pkg="livox_color_mapping" type="loam_scanRegistration_color" name="scanRegistration" output="screen">
+  </node>
+  
+  <!-- gdb debub mode (sudo apt install xterm): -->
+  <node pkg="livox_color_mapping" type="loam_laserMapping_color" name="laserMapping" output="screen" launch-prefix="xterm -e gdb -ex run --args ">
+  <param name="map_file_path" type="string" value="/home/yijiankeji/map/livox_color_mapping/231bincolor" />
+  <param name="filter_parameter_corner" type="double" value="0.1" />
+  <param name="filter_parameter_surf" type="double" value="0.2" />
+  </node>
+
+  <group if="$(arg rviz)">
+    <node launch-prefix="nice" pkg="rviz" type="rviz" name="rviz" args="-d $(find livox_color_mapping)/rviz_cfg/loam_livox.rviz" />
+  </group>
+
+</launch>

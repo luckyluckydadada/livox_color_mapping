@@ -47,7 +47,11 @@
 #include <sensor_msgs/PointCloud2.h>
 #include <eigen3/Eigen/Core>
 
-typedef pcl::PointXYZI PointType;
+// 使用pcl::PointXYZRGBL结构体代替自定义的PointXYZRGBI（pcl没有PointXYZRGBI结构体）
+// 自定义的PointXYZRGBI结构体不含很过内置函数
+//  XYZRGBL 的L是uint32_t 四字节
+//  XYZI    的I是float 四字节
+typedef pcl::PointXYZRGBL PointType;
 int scanID;
 
 int CloudFeatureFlag[32000];
@@ -119,31 +123,6 @@ bool plane_judge(const std::vector<PointType>& point_list,const int plane_thresh
     return false;
   }
 }
-void laserCloudHandler_temp(const sensor_msgs::PointCloud2ConstPtr& laserCloudMsg) //for hkmars data
-{
-
-  pcl::PointCloud<PointType>::Ptr laserCloudIn(new pcl::PointCloud<PointType>());
-
-  if(msg_window.size() < 2){
-    msg_window.push_back(laserCloudMsg);
-  }
-  else{
-    msg_window.erase(msg_window.begin());
-    msg_window.push_back(laserCloudMsg);
-  }
-
-  for(int i = 0; i < msg_window.size();i++){
-    pcl::PointCloud<PointType> temp;
-    pcl::fromROSMsg(*msg_window[i], temp);
-    *laserCloudIn += temp;
-  }
-  sensor_msgs::PointCloud2 laserCloudOutMsg;
-  pcl::toROSMsg(*laserCloudIn, laserCloudOutMsg);
-  laserCloudOutMsg.header.stamp = laserCloudMsg->header.stamp;
-  laserCloudOutMsg.header.frame_id = "/livox";
-  pubLaserCloud_temp.publish(laserCloudOutMsg);
-
-}
 void laserCloudHandler(const sensor_msgs::PointCloud2ConstPtr& laserCloudMsg)
 {
   pcl::PointCloud<PointType> laserCloudIn;
@@ -162,6 +141,9 @@ void laserCloudHandler(const sensor_msgs::PointCloud2ConstPtr& laserCloudMsg)
     point.x = laserCloudIn.points[i].x;
     point.y = laserCloudIn.points[i].y;
     point.z = laserCloudIn.points[i].z;
+    point.r = laserCloudIn.points[i].r;
+    point.g = laserCloudIn.points[i].g;
+    point.b = laserCloudIn.points[i].b;
     double theta = std::atan2(laserCloudIn.points[i].y,laserCloudIn.points[i].z) / M_PI * 180 + 180;
     
     scanID = std::floor(theta / 9);
@@ -172,8 +154,8 @@ void laserCloudHandler(const sensor_msgs::PointCloud2ConstPtr& laserCloudMsg)
     double dis2 = laserCloudIn.points[i].z * laserCloudIn.points[i].z + laserCloudIn.points[i].y * laserCloudIn.points[i].y;
     double theta2 = std::asin(sqrt(dis2/dis)) / M_PI * 180;
 
-    point.intensity = scanID+(laserCloudIn.points[i].intensity/10000);
-    //point.intensity = scanID+(double(i)/cloudSize);
+    point.label = scanID+(laserCloudIn.points[i].label/10000);
+    //point.label = scanID+(double(i)/cloudSize);
 
     if (!pcl_isfinite(point.x) ||
         !pcl_isfinite(point.y) ||
@@ -196,8 +178,6 @@ void laserCloudHandler(const sensor_msgs::PointCloud2ConstPtr& laserCloudMsg)
 
   pcl::PointCloud<PointType> surfPointsFlat;
 
-  pcl::PointCloud<PointType> laserCloudFull;
-
   int debugnum1 = 0;
   int debugnum2 = 0;
   int debugnum3 = 0;
@@ -207,8 +187,6 @@ void laserCloudHandler(const sensor_msgs::PointCloud2ConstPtr& laserCloudMsg)
   int count_num = 1;
   bool left_surf_flag = false;
   bool right_surf_flag = false;
-  Eigen::Vector3d surf_vector_current(0,0,0);
-  Eigen::Vector3d surf_vector_last(0,0,0);
   int last_surf_position = 0;
   double depth_threshold = 0.1;
   //********************************************************************************************************************************************
@@ -476,7 +454,7 @@ void laserCloudHandler(const sensor_msgs::PointCloud2ConstPtr& laserCloudMsg)
 
   //push_back feature
   for(int i = 0; i < cloudSize; i++){
-    //laserCloud->points[i].intensity = double(CloudFeatureFlag[i]) / 10000;
+    //laserCloud->points[i].label = double(CloudFeatureFlag[i]) / 10000;
     float dis = laserCloud->points[i].x * laserCloud->points[i].x
                 + laserCloud->points[i].y * laserCloud->points[i].y
                 + laserCloud->points[i].z * laserCloud->points[i].z;
@@ -528,13 +506,8 @@ int main(int argc, char** argv)
   ros::init(argc, argv, "scanRegistration");
   ros::NodeHandle nh;
 
-  // ros::Subscriber subLaserCloud_for_hk = nh.subscribe<sensor_msgs::PointCloud2>
-  //                                 ("/livox/lidar", 2, laserCloudHandler_temp);
-  // pubLaserCloud_for_hk = nh.advertise<sensor_msgs::PointCloud2>
-  //                                ("/livox/lidar_temp", 2);
-
   ros::Subscriber subLaserCloud = nh.subscribe<sensor_msgs::PointCloud2>
-                                  ("/livox/lidar", 100, laserCloudHandler);
+                                  ("/livox/color_lidar", 100, laserCloudHandler);
   pubLaserCloud = nh.advertise<sensor_msgs::PointCloud2>
                                  ("/livox_cloud", 20);
 

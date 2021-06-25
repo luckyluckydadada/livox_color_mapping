@@ -49,7 +49,11 @@
 #include <tf/transform_datatypes.h>
 #include <tf/transform_broadcaster.h>
 
-typedef pcl::PointXYZI PointType;
+// 使用pcl::PointXYZRGBL结构体代替自定义的PointXYZRGBI（pcl没有PointXYZRGBI结构体）
+// 自定义的PointXYZRGBI结构体不含很过内置函数
+//  XYZRGBL 的L是uint32_t 四字节
+//  XYZI    的I是float 四字节
+typedef pcl::PointXYZRGBL PointType;
 
 int kfNum = 0;
 
@@ -206,64 +210,11 @@ void pointAssociateToMap(PointType const *const pi, PointType *const po)
 	po->x = cos(transformTobeMapped[1]) * x2 + sin(transformTobeMapped[1]) * z2 + transformTobeMapped[3];
 	po->y = y2 + transformTobeMapped[4];
 	po->z = -sin(transformTobeMapped[1]) * x2 + cos(transformTobeMapped[1]) * z2 + transformTobeMapped[5];
-	po->intensity = pi->intensity;
+	po->label = pi->label;
 }
-//lidar coordinate sys to world coordinate sys USE S
-void pointAssociateToMap_all(PointType const *const pi, PointType *const po)
-{
-	// Eigen::Matrix4f T_aft,T_last,delta_T;
 
-	// Eigen::Matrix3f R_aft,R_last;
-	// Eigen::Quaternionf Q_aft,Q_last;
-	// Eigen::Vector3f t_aft,t_last;
-
-	// T_aft = trans_euler_to_matrix(transformAftMapped);
-	// T_last = trans_euler_to_matrix(transformLastMapped);
-
-	// R_aft = T_aft.block<3,3>(0,0);
-	// R_last = T_last.block<3,3>(0,0);
-
-	// Q_aft = R_aft;
-	// Q_last = R_last;
-
-	double s;
-	s = pi->intensity - int(pi->intensity);
-
-	//std::cout<<"DEBUG pointAssociateToMap_all s: "<<pi->intensity<<std::endl;
-
-	// Eigen::Quaternionf Q_s = Q_last.slerp(s,Q_aft);
-	// Eigen::Matrix3f R_s = Q_s.matrix();
-
-	// Eigen::Vector3f euler_s = R_s.eulerAngles(2,0,1);
-
-	float rx = (1 - s) * transformLastMapped[0] + s * transformAftMapped[0];
-	float ry = (1 - s) * transformLastMapped[1] + s * transformAftMapped[1];
-	float rz = (1 - s) * transformLastMapped[2] + s * transformAftMapped[2];
-	float tx = (1 - s) * transformLastMapped[3] + s * transformAftMapped[3];
-	float ty = (1 - s) * transformLastMapped[4] + s * transformAftMapped[4];
-	float tz = (1 - s) * transformLastMapped[5] + s * transformAftMapped[5];
-
-	//rot z（transformTobeMapped[2]）
-	float x1 = cos(rz) * pi->x - sin(rz) * pi->y;
-	float y1 = sin(rz) * pi->x + cos(rz) * pi->y;
-	float z1 = pi->z;
-
-	//rot x（transformTobeMapped[0]）
-	float x2 = x1;
-	float y2 = cos(rx) * y1 - sin(rx) * z1;
-	float z2 = sin(rx) * y1 + cos(rx) * z1;
-
-	//rot y（transformTobeMapped[1]）then add trans
-	po->x = cos(ry) * x2 + sin(ry) * z2 + tx;
-	po->y = y2 + ty;
-	po->z = -sin(ry) * x2 + cos(ry) * z2 + tz;
-	po->intensity = pi->intensity;
-}
 void RGBpointAssociateToMap(PointType const *const pi, pcl::PointXYZRGB *const po)
 {
-	double s;
-	s = pi->intensity - int(pi->intensity);
-
 	// float rx = (1-s)*transformLastMapped[0] + s * transformAftMapped[0];
 	// float ry = (1-s)*transformLastMapped[1] + s * transformAftMapped[1];
 	// float rz = (1-s)*transformLastMapped[2] + s * transformAftMapped[2];
@@ -290,43 +241,9 @@ void RGBpointAssociateToMap(PointType const *const pi, pcl::PointXYZRGB *const p
 	po->x = cos(ry) * x2 + sin(ry) * z2 + tx;
 	po->y = y2 + ty;
 	po->z = -sin(ry) * x2 + cos(ry) * z2 + tz;
-	//po->intensity = pi->intensity;
-
-	float intensity = pi->intensity;
-	intensity = intensity - std::floor(intensity);
-
-	int reflection_map = intensity * 10000;
-
-	//std::cout<<"DEBUG reflection_map "<<reflection_map<<std::endl;
-
-	if (reflection_map < 30)
-	{
-		int green = (reflection_map * 255 / 30);
-		po->r = 0;
-		po->g = green & 0xff;
-		po->b = 0xff;
-	}
-	else if (reflection_map < 90)
-	{
-		int blue = (((90 - reflection_map) * 255) / 60);
-		po->r = 0x0;
-		po->g = 0xff;
-		po->b = blue & 0xff;
-	}
-	else if (reflection_map < 150)
-	{
-		int red = ((reflection_map - 90) * 255 / 60);
-		po->r = red & 0xff;
-		po->g = 0xff;
-		po->b = 0x0;
-	}
-	else
-	{
-		int green = (((255 - reflection_map) * 255) / (255 - 150));
-		po->r = 0xff;
-		po->g = green & 0xff;
-		po->b = 0;
-	}
+	po->r = pi->r;
+	po->g = pi->g;
+	po->b = pi->b;
 }
 
 void pointAssociateTobeMapped(PointType const *const pi, PointType *const po)
@@ -345,7 +262,7 @@ void pointAssociateTobeMapped(PointType const *const pi, PointType *const po)
 	po->x = cos(transformTobeMapped[2]) * x2 + sin(transformTobeMapped[2]) * y2;
 	po->y = -sin(transformTobeMapped[2]) * x2 + cos(transformTobeMapped[2]) * y2;
 	po->z = z2;
-	po->intensity = pi->intensity;
+	po->label = pi->label;
 }
 
 //接收边沿点
@@ -895,7 +812,7 @@ int main(int argc, char **argv)
 								coeff.x = s * la;
 								coeff.y = s * lb;
 								coeff.z = s * lc;
-								coeff.intensity = s * ld2;
+								coeff.label = s * ld2;
 
 								if (s > 0.1)
 								{ //距离足够小才使用
@@ -967,7 +884,7 @@ int main(int argc, char **argv)
 								coeff.x = s * pa;
 								coeff.y = s * pb;
 								coeff.z = s * pc;
-								coeff.intensity = s * pd2;
+								coeff.label = s * pd2;
 
 								if (s > 0.1)
 								{
@@ -1021,9 +938,9 @@ int main(int argc, char **argv)
 						matA.at<float>(i, 3) = coeff.x;
 						matA.at<float>(i, 4) = coeff.y;
 						matA.at<float>(i, 5) = coeff.z;
-						matB.at<float>(i, 0) = -coeff.intensity;
+						matB.at<float>(i, 0) = -coeff.label;
 
-						debug_distance += fabs(coeff.intensity);
+						debug_distance += fabs(coeff.label);
 					}
 					cv::transpose(matA, matAt);
 					matAtA = matAt * matA;
@@ -1262,6 +1179,7 @@ int main(int argc, char **argv)
 		status = ros::ok();
 		rate.sleep();
 	}
+
 	//--------------------------save map---------------
 	std::string surf_filename(map_file_path + "/surf.pcd");
 	std::string corner_filename(map_file_path + "/corner.pcd");
@@ -1273,7 +1191,7 @@ int main(int argc, char **argv)
 					  << kf[4] << " " << kf[5] << " " << kf[6] << " " << std::endl;
 	}
 	keyframe_file.close();
-	pcl::PointCloud<pcl::PointXYZI> surf_points, corner_points;
+	pcl::PointCloud<PointType> surf_points, corner_points;
 	surf_points = *laserCloudSurfFromMap;
 	corner_points = *laserCloudCornerFromMap;
 	if (surf_points.size() > 0 && corner_points.size() > 0)

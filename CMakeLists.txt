@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(livox_mapping)
+project(livox_color_mapping)
 
 SET(CMAKE_BUILD_TYPE "Debug")
 
@@ -45,10 +45,13 @@ target_link_libraries(livox_repub ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_
 
 add_executable(loam_scanRegistration src/scanRegistration.cpp)
 target_link_libraries(loam_scanRegistration ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBS})
+add_executable(loam_scanRegistration_color src/scanRegistration-color.cpp)
+target_link_libraries(loam_scanRegistration_color ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBS})
 
 add_executable(loam_scanRegistration_horizon src/scanRegistration_horizon.cpp)
 target_link_libraries(loam_scanRegistration_horizon ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBS})
 
 add_executable(loam_laserMapping src/laserMapping.cpp)
 target_link_libraries(loam_laserMapping ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBS})
-
+add_executable(loam_laserMapping_color src/laserMapping-color.cpp)
+target_link_libraries(loam_laserMapping_color ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBS})

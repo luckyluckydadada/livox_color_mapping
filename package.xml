@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package>
-  <name>livox_mapping</name>
+  <name>livox_color_mapping</name>
   <version>0.0.0</version>
 
   <description>
@@ -10,11 +10,11 @@
       Robotics: Science and Systems Conference (RSS). Berkeley, CA, July 2014.
   </description>
 
-  <maintainer email="dev@livoxtech.com">claydergc</maintainer>
+  <maintainer email="savoki1024@gmail.com">Lucky</maintainer>
 
   <license>BSD</license>
 
-  <author email="zhangji@cmu.edu">Ji Zhang</author>
+  <author email="savoki1024@gmail.com">Lucky</author>
   
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>geometry_msgs</build_depend>
