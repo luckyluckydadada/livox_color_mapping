@@ -49,11 +49,7 @@
 #include <tf/transform_datatypes.h>
 #include <tf/transform_broadcaster.h>
 
-// 使用pcl::PointXYZRGBL结构体代替自定义的PointXYZRGBI（pcl没有PointXYZRGBI结构体）
-// 自定义的PointXYZRGBI结构体不含很过内置函数
-//  XYZRGBL 的L是uint32_t 四字节
-//  XYZI    的I是float 四字节
-typedef pcl::PointXYZRGBL PointType;
+typedef pcl::PointXYZRGBNormal PointType;
 
 int kfNum = 0;
 
@@ -210,7 +206,7 @@ void pointAssociateToMap(PointType const *const pi, PointType *const po)
 	po->x = cos(transformTobeMapped[1]) * x2 + sin(transformTobeMapped[1]) * z2 + transformTobeMapped[3];
 	po->y = y2 + transformTobeMapped[4];
 	po->z = -sin(transformTobeMapped[1]) * x2 + cos(transformTobeMapped[1]) * z2 + transformTobeMapped[5];
-	po->label = pi->label;
+	po->curvature = pi->curvature;
 }
 
 void RGBpointAssociateToMap(PointType const *const pi, pcl::PointXYZRGB *const po)
@@ -262,7 +258,7 @@ void pointAssociateTobeMapped(PointType const *const pi, PointType *const po)
 	po->x = cos(transformTobeMapped[2]) * x2 + sin(transformTobeMapped[2]) * y2;
 	po->y = -sin(transformTobeMapped[2]) * x2 + cos(transformTobeMapped[2]) * y2;
 	po->z = z2;
-	po->label = pi->label;
+	po->curvature = pi->curvature;
 }
 
 //接收边沿点
@@ -812,7 +808,7 @@ int main(int argc, char **argv)
 								coeff.x = s * la;
 								coeff.y = s * lb;
 								coeff.z = s * lc;
-								coeff.label = s * ld2;
+								coeff.curvature = s * ld2;
 
 								if (s > 0.1)
 								{ //距离足够小才使用
@@ -884,7 +880,7 @@ int main(int argc, char **argv)
 								coeff.x = s * pa;
 								coeff.y = s * pb;
 								coeff.z = s * pc;
-								coeff.label = s * pd2;
+								coeff.curvature = s * pd2;
 
 								if (s > 0.1)
 								{
@@ -938,9 +934,9 @@ int main(int argc, char **argv)
 						matA.at<float>(i, 3) = coeff.x;
 						matA.at<float>(i, 4) = coeff.y;
 						matA.at<float>(i, 5) = coeff.z;
-						matB.at<float>(i, 0) = -coeff.label;
+						matB.at<float>(i, 0) = -coeff.curvature;
 
-						debug_distance += fabs(coeff.label);
+						debug_distance += fabs(coeff.curvature);
 					}
 					cv::transpose(matA, matAt);
 					matAtA = matAt * matA;

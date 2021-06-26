@@ -47,11 +47,7 @@
 #include <sensor_msgs/PointCloud2.h>
 #include <eigen3/Eigen/Core>
 
-// 使用pcl::PointXYZRGBL结构体代替自定义的PointXYZRGBI（pcl没有PointXYZRGBI结构体）
-// 自定义的PointXYZRGBI结构体不含很过内置函数
-//  XYZRGBL 的L是uint32_t 四字节
-//  XYZI    的I是float 四字节
-typedef pcl::PointXYZRGBL PointType;
+typedef pcl::PointXYZRGBNormal PointType;
 int scanID;
 
 int CloudFeatureFlag[32000];
@@ -153,9 +149,6 @@ void laserCloudHandler(const sensor_msgs::PointCloud2ConstPtr& laserCloudMsg)
 
     double dis2 = laserCloudIn.points[i].z * laserCloudIn.points[i].z + laserCloudIn.points[i].y * laserCloudIn.points[i].y;
     double theta2 = std::asin(sqrt(dis2/dis)) / M_PI * 180;
-
-    point.label = scanID+(laserCloudIn.points[i].label/10000);
-    //point.label = scanID+(double(i)/cloudSize);
 
     if (!pcl_isfinite(point.x) ||
         !pcl_isfinite(point.y) ||
@@ -454,17 +447,11 @@ void laserCloudHandler(const sensor_msgs::PointCloud2ConstPtr& laserCloudMsg)
 
   //push_back feature
   for(int i = 0; i < cloudSize; i++){
-    //laserCloud->points[i].label = double(CloudFeatureFlag[i]) / 10000;
     float dis = laserCloud->points[i].x * laserCloud->points[i].x
                 + laserCloud->points[i].y * laserCloud->points[i].y
                 + laserCloud->points[i].z * laserCloud->points[i].z;
     float dis2 = laserCloud->points[i].y * laserCloud->points[i].y + laserCloud->points[i].z * laserCloud->points[i].z;
     float theta2 = std::asin(sqrt(dis2/dis)) / M_PI * 180;
-    //std::cout<<"DEBUG theta "<<theta2<<std::endl;
-    // if(theta2 > 34.2 || theta2 < 1){
-    //    continue;
-    // }
-    //if(dis > 30*30) continue;
 
     if(CloudFeatureFlag[i] == 1){
       surfPointsFlat.push_back(laserCloud->points[i]);
