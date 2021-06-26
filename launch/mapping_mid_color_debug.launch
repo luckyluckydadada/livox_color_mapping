@@ -13,7 +13,7 @@
   </node>
 
   <group if="$(arg rviz)">
-    <node launch-prefix="nice" pkg="rviz" type="rviz" name="rviz" args="-d $(find livox_color_mapping)/rviz_cfg/loam_livox.rviz" />
+    <node launch-prefix="nice" pkg="rviz" type="rviz" name="rviz" args="-d $(find livox_color_mapping)/rviz_cfg/loam_livox_color.rviz" />
   </group>
 
 </launch>
