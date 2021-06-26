@@ -1262,6 +1262,7 @@ int main(int argc, char **argv)
 		status = ros::ok();
 		rate.sleep();
 	}
+
 	//--------------------------save map---------------
 	std::string surf_filename(map_file_path + "/surf.pcd");
 	std::string corner_filename(map_file_path + "/corner.pcd");
@@ -1273,7 +1274,7 @@ int main(int argc, char **argv)
 					  << kf[4] << " " << kf[5] << " " << kf[6] << " " << std::endl;
 	}
 	keyframe_file.close();
-	pcl::PointCloud<pcl::PointXYZI> surf_points, corner_points;
+	pcl::PointCloud<PointType> surf_points, corner_points;
 	surf_points = *laserCloudSurfFromMap;
 	corner_points = *laserCloudCornerFromMap;
 	if (surf_points.size() > 0 && corner_points.size() > 0)
