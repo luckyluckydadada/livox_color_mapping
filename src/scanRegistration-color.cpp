@@ -146,13 +146,6 @@ void laserCloudHandler(const sensor_msgs::PointCloud2ConstPtr &laserCloudMsg)
 		point.r = laserCloudIn.points[i].r;
 		point.g = laserCloudIn.points[i].g;
 		point.b = laserCloudIn.points[i].b;
-		double theta = std::atan2(laserCloudIn.points[i].y, laserCloudIn.points[i].z) / M_PI * 180 + 180;
-
-		scanID = std::floor(theta / 9);
-		float dis = point.x * point.x + point.y * point.y + point.z * point.z;
-
-		double dis2 = laserCloudIn.points[i].z * laserCloudIn.points[i].z + laserCloudIn.points[i].y * laserCloudIn.points[i].y;
-		double theta2 = std::asin(sqrt(dis2 / dis)) / M_PI * 180;
 
 		if (!pcl_isfinite(point.x) ||
 			!pcl_isfinite(point.y) ||
