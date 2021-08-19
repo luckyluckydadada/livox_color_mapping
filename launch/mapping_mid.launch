@@ -6,7 +6,7 @@
   </node>
 
   <node pkg="livox_color_mapping" type="loam_laserMapping" name="laserMapping" output="screen">
-  <param name="map_file_path" type="string" value="/home/yijiankeji/map/livox_mapping/231bin" />
+  <param name="map_file_path" type="string" value="/home/lucky/map/livox_mapping/" />
   <param name="filter_parameter_corner" type="double" value="0.1" />
   <param name="filter_parameter_surf" type="double" value="0.2" />
   </node>
